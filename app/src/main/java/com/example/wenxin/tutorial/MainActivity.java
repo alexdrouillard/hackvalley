@@ -28,6 +28,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     private Thread sendThread;
     private final float[] mAccelerometerReading = new float[3];
     private final float[] mMagnetometerReading = new float[3];
+    private final float[] mGameRotationReading = new float[3];
 
     private final float[] mRotationMatrix = new float[9];
     private final float[] mOrientationAngles = new float[3];
@@ -69,6 +70,8 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                 SensorManager.SENSOR_DELAY_NORMAL, SensorManager.SENSOR_DELAY_UI);
         this.mSensorManager.registerListener(this, mSensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD),
                 SensorManager.SENSOR_DELAY_NORMAL, SensorManager.SENSOR_DELAY_UI);
+        this.mSensorManager.registerListener(this, mSensorManager.getDefaultSensor(Sensor.TYPE_GAME_ROTATION_VECTOR),
+                SensorManager.SENSOR_DELAY_NORMAL, SensorManager.SENSOR_DELAY_UI);
     }
 
     @Override
@@ -91,6 +94,8 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 //            Log.d("X Magnetometer",Float.toString(event.values[0]));
 //            Log.d("Y Magnetometer",Float.toString(event.values[1]));
 //            Log.d("Z Magnetometer",Float.toString(event.values[2]));
+        }else if(event.sensor.getType() == Sensor.TYPE_GAME_ROTATION_VECTOR){
+            System.arraycopy(event.values, 0, mGameRotationReading, 0, mGameRotationReading.length);
         }
 
 //        Log.d("X Orientation", Float.toString(mOrientationAngles[0]));
@@ -106,9 +111,8 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         rotY.setText(rotYStr);
         rotZ.setText(rotZStr);
 
-
         SendDataTask task =  new SendDataTask();
-        task.execute(mOrientationAngles[0],mOrientationAngles[1],mOrientationAngles[2]);
+        task.execute(mGameRotationReading[0],mOrientationAngles[1],mOrientationAngles[2]);
     }
 
     public void updateOrientationAngles(){
