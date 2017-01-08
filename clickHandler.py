@@ -1,4 +1,5 @@
-import socket, traceback, win32api, win32con, time, os
+import socket, traceback, win32api, win32con, time, os, turtle 
+from win32api import GetSystemMetrics
 
 host = ''
 port = 50000
@@ -8,21 +9,20 @@ s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 s.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
 s.bind((host, port))
 
-#used for debugging
+print("Success binding")
 
-def click(x,y):
-    win32api.SetCursorPos((x,y))
-    #win32api.mouse_event(win32con.MOUSEEVENTF_LEFTDOWN,x,y,0,0)
-    #win32api.mouse_event(win32con.MOUSEEVENTF_LEFTUP,x,y,0,0)
+
+############################################################
+#						Turtle stuff					   #
+############################################################
+      # Create our favorite turtle
 
 #gyro 1 y rotation, gyro3 z rotation
-
-print("Success binding")
-x = 500
-y = 500
-while 1:
-    message, address = s.recvfrom(8192)
-    messageString = message.decode("utf-8")
+def read():
+    print("Reading")
+    for i in range (10):
+    	message, address = s.recvfrom(8192)
+    	messageString = message.decode("utf-8")
     #print(messageString)
     key1 = "RotationVector1>"
     key2 = "RotationVector2>"
@@ -37,23 +37,57 @@ while 1:
      : (messageString.index("/" + key3) -1)]
 
 
-    print (xRotation + " " + yRotation + " " + zRotation)
-    time.sleep(0.01)
-    for i in range (10):
-    	x += int(float(zRotation) * -10)
-    	y += int(float(yRotation) * -10)
-    	#click(x,y)
-	
-# Example of XML data received:
-# <Node Id>node12</Node Id>
-# <GPS>
-# <Latitude>1.123123</Latitude>
-# <Longitude>234.1231231</Longitude>
-# <Accuracy>40.0</Accuracy>
-# </GPS>
-# <Accelerometer>
-# <Accelerometer1>0.38444442222</Accelerometer1>
-# <Accelerometer2>0.03799999939</Accelerometer2>
-# <Accelerometer3>9.19400000331</Accelerometer3>
-# </Accelerometer>
-# <TimeStamp>1370354489083</TimeStamp>
+    return [float(xRotation) + 1, float(yRotation) + 1, float(zRotation) + 1]
+
+
+# The next four functions are our "event handlers".
+counter = [0]
+#Used for calibration
+xCList = []
+yCList = []
+zCList = []
+def h1():
+	readOut = read()
+	xCList.append(readOut[0])
+	yCList.append(readOut[1])
+	zCList.append(readOut[2])
+	print(xCList)
+	print(yCList)
+	print(zCList)
+	counter[0] += 1
+	if (counter[0] == 4):
+		move()
+
+def click(x,y):
+    win32api.SetCursorPos((x,y))
+
+def move():
+	print("moving")
+	while 1:
+		currentPos = read()
+		xDistance = (zCList[0] - zCList[1])
+		yDistance = (yCList[0] - yCList[2])
+		posxDistance = (currentPos[2] - zCList[1])
+		posyDistance = (currentPos[1] - yCList[0])
+
+		if (xDistance > 1):
+			xDistance = 1 - xDistance % 1
+		if (yDistance > 1):
+			yDistance = 1 - yDistance % 1
+		if (posxDistance > 1):
+			posxDistance = 1 - posxDistance % 1
+		if (posyDistance > 1):
+			posyDistance = 1 - posyDistance % 1
+		x = posxDistance / xDistance
+
+		y = posyDistance / yDistance
+
+		print("X: " + str(x) + " Y: " + str(y))
+
+		click(int(x)* 400, int(y) * 400)
+
+while 1:
+	if (win32api.GetAsyncKeyState(ord('H'))):
+		h1()
+		time.sleep(1)
+	read()
