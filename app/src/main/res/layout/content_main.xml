@@ -13,7 +13,9 @@
     android:paddingTop="@dimen/activity_vertical_margin"
     app:layout_behavior="@string/appbar_scrolling_view_behavior"
     tools:context="com.example.wenxin.tutorial.MainActivity"
-    tools:showIn="@layout/activity_main">
+    tools:showIn="@layout/activity_main"
+    android:background="@color/black"
+    >
 
 
     <TextView
@@ -23,7 +25,10 @@
         android:id="@+id/textView"
         android:layout_alignTop="@+id/textView2"
         android:layout_alignParentLeft="true"
-        android:layout_alignParentStart="true" />
+        android:layout_alignParentStart="true"
+        android:visibility="invisible"
+        />
+    <!--
     <Button
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -32,13 +37,15 @@
         android:id="@+id/button"
         android:layout_below="@+id/textView2"
         android:layout_centerHorizontal="true" />
-
+    -->
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Hello World!"
         android:id="@+id/textView2"
-        android:layout_centerHorizontal="true" />
+        android:layout_centerHorizontal="true"
+        android:visibility="invisible"
+        />
 
     <TextView
         android:layout_width="wrap_content"
@@ -47,6 +54,37 @@
         android:id="@+id/textView3"
         android:layout_alignParentTop="true"
         android:layout_alignParentRight="true"
-        android:layout_alignParentEnd="true" />
+        android:layout_alignParentEnd="true"
+        android:visibility="invisible"
+        />
+
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/button_calibrate"
+        android:layout_marginTop="50dp"
+        android:id="@+id/btnCalibrate"
+        android:layout_centerVertical="true"
+        android:layout_centerHorizontal="true" />
+
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/button_lclick"
+        android:layout_marginTop="50dp"
+        android:id="@+id/btnLC"
+        android:layout_below="@+id/btnCalibrate"
+        android:layout_toLeftOf="@+id/btnCalibrate"
+        android:layout_centerHorizontal="true" />
+
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/button_rclick"
+        android:layout_marginTop="50dp"
+        android:id="@+id/btnRC"
+        android:layout_below="@+id/btnCalibrate"
+        android:layout_toRightOf="@+id/btnCalibrate"
+        android:layout_centerHorizontal="true" />
 
 </RelativeLayout>

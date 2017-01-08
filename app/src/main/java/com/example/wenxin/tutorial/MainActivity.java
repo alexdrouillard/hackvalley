@@ -11,28 +11,29 @@ import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.TextView;
 
+import java.io.IOException;
+import java.net.*;
+import java.net.InetAddress;
+
 public class MainActivity extends AppCompatActivity implements SensorEventListener2 {
 
-    private SensorManager mSensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
+    private SensorManager mSensorManager;
+    private Sensor accelerometer;
+    private Thread sendThread;
     private final float[] mAccelerometerReading = new float[3];
     private final float[] mMagnetometerReading = new float[3];
 
     private final float[] mRotationMatrix = new float[9];
     private final float[] mOrientationAngles = new float[3];
 
-    public void onSensorChanged(SensorEvent event) {
-
-
-    }
-
     TextView rotX, rotY, rotZ;
     String str;
-    int i=0;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
 
@@ -44,53 +45,75 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         rotY = (TextView) findViewById(R.id.textView2);
         rotZ = (TextView) findViewById(R.id.textView3);
 
-        Thread t = new Thread() {
-            @Override
-            public void run() {
-                try {
-                    while (!isInterrupted()) {
-                        Thread.sleep(60);
-                        runOnUiThread(new Runnable() {
-                            @Override
-                            public void run() {
-                                i++;
-                                str = Integer.toString(i);
-                                rotX.setText(str);
-                            }
-                        });
-                    }
-                } catch (InterruptedException e) {
-                }
-            }
-        };
-
-        t.start();
-
-
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
-        FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
-        fab.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
-                        .setAction("Action", null).show();
-            }
-        });
+//        FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
+//        fab.setOnClickListener(new View.OnClickListener() {
+//            @Override
+//            public void onClick(View view) {
+//                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
+//                        .setAction("Action", null).show();
+//            }
+//        });
     }
 
     public void onAccuracyChanged(Sensor sensor, int accuracy){
         //TODO:Figure out what to do on accuracy change
     }
 
+    @Override
     protected void onResume(){
         super.onResume();
+        this.mSensorManager.registerListener(this, mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER),
+                SensorManager.SENSOR_DELAY_NORMAL, SensorManager.SENSOR_DELAY_UI);
+        this.mSensorManager.registerListener(this, mSensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD),
+                SensorManager.SENSOR_DELAY_NORMAL, SensorManager.SENSOR_DELAY_UI);
+    }
 
-        this.mSensorManager.registerListener(this, Sensor.TYPE_ACCELEROMETER,
-                SensorManager.SENSOR_DELAY_NORMAL, SensorManager.SENSOR_DELAY_UI);
-        this.mSensorManager.registerListener(this, Sensor.TYPE_MAGNETIC_FIELD,
-                SensorManager.SENSOR_DELAY_NORMAL, SensorManager.SENSOR_DELAY_UI);
+    @Override
+    protected void onPause(){
+        super.onPause();
+
+        mSensorManager.unregisterListener(this);
+    }
+
+    @Override
+    public void onSensorChanged(SensorEvent event){
+        if(event.sensor.getType() == Sensor.TYPE_ACCELEROMETER){
+            System.arraycopy(event.values, 0, mAccelerometerReading, 0, mAccelerometerReading.length);
+//            Log.d("X Accelerometer",Float.toString(event.values[0]));
+//            Log.d("Y Accelerometer", Float.toString(event.values[1]));
+//            Log.d("Z Accelerometer", Float.toString(event.values[2]));
+        }
+        else if(event.sensor.getType() == Sensor.TYPE_MAGNETIC_FIELD){
+            System.arraycopy(event.values, 0, mMagnetometerReading, 0, mMagnetometerReading.length);
+//            Log.d("X Magnetometer",Float.toString(event.values[0]));
+//            Log.d("Y Magnetometer",Float.toString(event.values[1]));
+//            Log.d("Z Magnetometer",Float.toString(event.values[2]));
+        }
+
+//        Log.d("X Orientation", Float.toString(mOrientationAngles[0]));
+//        Log.d("Y Orientation", Float.toString(mOrientationAngles[1]));
+//        Log.d("Z Orientation", Float.toString(mOrientationAngles[2]));
+        updateOrientationAngles();
+
+        String rotXStr = Float.toString(mOrientationAngles[0]);
+        String rotYStr = Float.toString(mOrientationAngles[1]);
+        String rotZStr = Float.toString(mOrientationAngles[2]);
+
+        rotX.setText(rotXStr);
+        rotY.setText(rotYStr);
+        rotZ.setText(rotZStr);
+
+
+        SendDataTask task =  new SendDataTask();
+        task.execute(mOrientationAngles[0],mOrientationAngles[1],mOrientationAngles[2]);
+    }
+
+    public void updateOrientationAngles(){
+        mSensorManager.getRotationMatrix(mRotationMatrix, null, mAccelerometerReading, mMagnetometerReading);
+        mSensorManager.getOrientation(mRotationMatrix, mOrientationAngles);
     }
 
     @Override
@@ -114,4 +137,11 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
         return super.onOptionsItemSelected(item);
     }
+
+    @Override
+    public void onFlushCompleted(Sensor sensor) {
+        //TODO:What do I do in this method?
+    }
+
+
 }
