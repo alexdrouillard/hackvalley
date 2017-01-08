@@ -1,4 +1,4 @@
-import socket, traceback, win32api, win32con, time, os, turtle 
+import socket, traceback, win32api, win32con, time, os, turtle, re 
 from win32api import GetSystemMetrics
 
 host = ''
@@ -17,27 +17,19 @@ print("Success binding")
 ############################################################
       # Create our favorite turtle
 
+def rDevice():
+	print("Reading")
+	message, address = s.recvfrom(8192)
+    messageString = message.decode("utf-8")
+    return messageString
+
 #gyro 1 y rotation, gyro3 z rotation
 def read():
     print("Reading")
-    for i in range (10):
-    	message, address = s.recvfrom(8192)
-    	messageString = message.decode("utf-8")
-    #print(messageString)
-    key1 = "RotationVector1>"
-    key2 = "RotationVector2>"
-    key3 = "RotationVector3>" #placeholder
-    xRotation = messageString[(messageString.index(key1) + len(key1))
-     : (messageString.index("/" + key1) -1)]
-
-    yRotation = messageString[(messageString.index(key2) + len(key2))
-     : (messageString.index("/" + key2) -1)]
-
-    zRotation = messageString[(messageString.index(key3) + len(key3))
-     : (messageString.index("/" + key3) -1)]
-
-
-    return [float(xRotation) + 1, float(yRotation) + 1, float(zRotation) + 1]
+    message, address = s.recvfrom(8192)
+    messageString = message.decode("utf-8")    
+    rotateList = re.findall(r"[-+]?\d*\.\d+|\d+", messageString)
+    return rotateList
 
 
 # The next four functions are our "event handlers".
@@ -87,7 +79,7 @@ def move():
 		click(int(x)* 400, int(y) * 400)
 
 while 1:
-	if (win32api.GetAsyncKeyState(ord('H'))):
+	recentRead = rDevice()
+	if (recentRead[5]):
 		h1()
 		time.sleep(1)
-	read()
