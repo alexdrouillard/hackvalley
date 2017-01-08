@@ -12,9 +12,11 @@ import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.Button;
 import android.widget.TextView;
 
 import java.io.IOException;
@@ -30,11 +32,18 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     private final float[] mMagnetometerReading = new float[3];
     private final float[] mGameRotationReading = new float[3];
 
+    private long intervalInMilliseconds = 100;
+    private long previousScheduledTime = 0;
+
     private final float[] mRotationMatrix = new float[9];
     private final float[] mOrientationAngles = new float[3];
 
     TextView rotX, rotY, rotZ;
+    Button leftClick, rightClick;
     String str;
+
+    private boolean leftClickPressed = false;
+    private boolean rightClickPressed = false;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
 
@@ -45,9 +54,35 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         rotX = (TextView) findViewById(R.id.textView);
         rotY = (TextView) findViewById(R.id.textView2);
         rotZ = (TextView) findViewById(R.id.textView3);
+        leftClick = (Button) findViewById(R.id.btnLC);
+        rightClick = (Button) findViewById(R.id.btnRC);
+
 
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
+
+        leftClick.setOnTouchListener(new View.OnTouchListener() {
+            @Override
+            public boolean onTouch(View v, MotionEvent event) {
+                if (event.getAction() == MotionEvent.ACTION_BUTTON_PRESS){
+                    leftClickPressed = true;
+                }else if(event.getAction() == MotionEvent.ACTION_BUTTON_RELEASE){
+                    leftClickPressed = false;
+                }
+                return true;
+            }
+        });
+
+        rightClick.setOnTouchListener(new View.OnTouchListener(){
+            @Override
+            public boolean onTouch(View v, MotionEvent event){
+                if(event.getAction() == MotionEvent.ACTION_BUTTON_PRESS){
+                    rightClickPressed = true;
+                }else if(event.getAction() == MotionEvent.ACTION_BUTTON_RELEASE){
+                    rightClickPressed = false;
+                }
+            }
+        });
 
 //        FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
 //        fab.setOnClickListener(new View.OnClickListener() {
@@ -112,7 +147,18 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         rotZ.setText(rotZStr);
 
         SendDataTask task =  new SendDataTask();
-        task.execute(mGameRotationReading[0],mOrientationAngles[1],mOrientationAngles[2]);
+
+        float leftClickConversion = 0f;
+        float rightClickConversion = 0f;
+
+        if(leftClickPressed){
+            leftClickConversion = 1f;
+        }
+
+        if(rightClickPressed){
+            rightClickConversion = 1f;
+        }
+        task.execute(mGameRotationReading[0],mOrientationAngles[1],mOrientationAngles[2],leftClickConversion,rightClickConversion);
     }
 
     public void updateOrientationAngles(){
