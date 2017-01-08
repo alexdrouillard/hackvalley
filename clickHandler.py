@@ -1,4 +1,4 @@
-import socket, traceback, win32api, win32con, time
+import socket, traceback, win32api, win32con, time, os
 
 host = ''
 port = 50000
@@ -18,26 +18,31 @@ def click(x,y):
 #gyro 1 y rotation, gyro3 z rotation
 
 print("Success binding")
+x = 500
+y = 500
 while 1:
     message, address = s.recvfrom(8192)
     messageString = message.decode("utf-8")
     #print(messageString)
-    key1 = "Gyroscope1>"
-    key2 = "Gyroscope2>"
-    key3 = "Gyroscope3>"
-    gyro1 = messageString[(messageString.index(key1) + len(key1))
+    key1 = "RotationVector1>"
+    key2 = "RotationVector2>"
+    key3 = "RotationVector3>" #placeholder
+    xRotation = messageString[(messageString.index(key1) + len(key1))
      : (messageString.index("/" + key1) -1)]
 
-    gyro2 = messageString[(messageString.index(key2) + len(key2))
+    yRotation = messageString[(messageString.index(key2) + len(key2))
      : (messageString.index("/" + key2) -1)]
 
-    gyro3 = messageString[(messageString.index(key3) + len(key3))
+    zRotation = messageString[(messageString.index(key3) + len(key3))
      : (messageString.index("/" + key3) -1)]
 
 
-    print (gyro1 + " " + gyro2 + " " + gyro3)
-
-    click(int(float(gyro3)) * 10,int(float(gyro1)) * 10)
+    print (xRotation + " " + yRotation + " " + zRotation)
+    time.sleep(0.01)
+    for i in range (10):
+    	x += int(float(zRotation) * -10)
+    	y += int(float(yRotation) * -10)
+    	#click(x,y)
 	
 # Example of XML data received:
 # <Node Id>node12</Node Id>
