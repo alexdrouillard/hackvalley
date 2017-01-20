@@ -30,6 +30,7 @@ public class SendDataTask extends AsyncTask<Float, Void, Boolean>{
                 dataConstructor.append(strings[stringIndex]);
                 dataConstructor.append('!');
             }
+            Log.d("Message to be sent",dataConstructor.toString());
             byte[] dataToSendAsBytes = dataConstructor.toString().getBytes();
             DatagramPacket packet =  new DatagramPacket(dataToSendAsBytes,
                     dataToSendAsBytes.length,
@@ -49,6 +50,7 @@ public class SendDataTask extends AsyncTask<Float, Void, Boolean>{
 
     protected void onPostExecute(Boolean result){
         if(result){
+            socket.disconnect();
             socket.close();
         }
     }
