@@ -12,9 +12,11 @@ import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.Button;
 import android.widget.TextView;
 
 import java.io.IOException;
@@ -28,12 +30,20 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     private Thread sendThread;
     private final float[] mAccelerometerReading = new float[3];
     private final float[] mMagnetometerReading = new float[3];
+    private final float[] mRotationReading = new float[3];
+
+    private long intervalInMilliseconds = 100;
+    private long previousScheduledTime = 0;
 
     private final float[] mRotationMatrix = new float[9];
     private final float[] mOrientationAngles = new float[3];
 
     TextView rotX, rotY, rotZ;
+    Button leftClick, rightClick, calibrationButton;
     String str;
+
+    private boolean leftClickPressed = false;
+    private boolean rightClickPressed = false;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
 
@@ -44,9 +54,39 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         rotX = (TextView) findViewById(R.id.textView);
         rotY = (TextView) findViewById(R.id.textView2);
         rotZ = (TextView) findViewById(R.id.textView3);
+        leftClick = (Button) findViewById(R.id.btnLC);
+        rightClick = (Button) findViewById(R.id.btnRC);
+
 
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
+
+        leftClick.setOnTouchListener(new View.OnTouchListener() {
+            @Override
+            public boolean onTouch(View v, MotionEvent event) {
+                if (event.getAction() == MotionEvent.ACTION_DOWN){
+                    leftClickPressed = true;
+                }else if(event.getAction() == MotionEvent.ACTION_UP || event.getAction() == MotionEvent.ACTION_CANCEL){
+                    leftClickPressed = false;
+                }
+                //Log.d("On Touch Left Click", MotionEvent.actionToString(event.getAction()));
+                return true;
+            }
+        });
+
+        rightClick.setOnTouchListener(new View.OnTouchListener(){
+            @Override
+            public boolean onTouch(View v, MotionEvent event){
+                if(event.getAction() == MotionEvent.ACTION_DOWN){
+                    rightClickPressed = true;
+                }else if(event.getAction() == MotionEvent.ACTION_UP || event.getAction() == MotionEvent.ACTION_DOWN){
+                    rightClickPressed = false;
+                }
+                //Log.d("On Touch Right Click", Boolean.toString(rightClickPressed));
+                return true;
+            }
+        });
+
 
 //        FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
 //        fab.setOnClickListener(new View.OnClickListener() {
@@ -68,6 +108,8 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         this.mSensorManager.registerListener(this, mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER),
                 SensorManager.SENSOR_DELAY_NORMAL, SensorManager.SENSOR_DELAY_UI);
         this.mSensorManager.registerListener(this, mSensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD),
+                SensorManager.SENSOR_DELAY_NORMAL, SensorManager.SENSOR_DELAY_UI);
+        this.mSensorManager.registerListener(this, mSensorManager.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR),
                 SensorManager.SENSOR_DELAY_NORMAL, SensorManager.SENSOR_DELAY_UI);
     }
 
@@ -91,6 +133,8 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 //            Log.d("X Magnetometer",Float.toString(event.values[0]));
 //            Log.d("Y Magnetometer",Float.toString(event.values[1]));
 //            Log.d("Z Magnetometer",Float.toString(event.values[2]));
+        }else if(event.sensor.getType() == Sensor.TYPE_ROTATION_VECTOR){
+            System.arraycopy(event.values, 0, mRotationReading, 0, mRotationReading.length);
         }
 
 //        Log.d("X Orientation", Float.toString(mOrientationAngles[0]));
@@ -98,7 +142,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 //        Log.d("Z Orientation", Float.toString(mOrientationAngles[2]));
         updateOrientationAngles();
 
-        String rotXStr = Float.toString(mOrientationAngles[0]);
+        String rotXStr = Float.toString(mRotationReading[2]);
         String rotYStr = Float.toString(mOrientationAngles[1]);
         String rotZStr = Float.toString(mOrientationAngles[2]);
 
@@ -106,9 +150,22 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         rotY.setText(rotYStr);
         rotZ.setText(rotZStr);
 
-
         SendDataTask task =  new SendDataTask();
-        task.execute(mOrientationAngles[0],mOrientationAngles[1],mOrientationAngles[2]);
+
+        float leftClickConversion = 0f;
+        float rightClickConversion = 0f;
+
+        if(leftClickPressed){
+            leftClickConversion = 1f;
+        }
+
+        if(rightClickPressed){
+            rightClickConversion = 1f;
+        }
+
+        //Log.d("Left Click",Float.toString(leftClickConversion));
+        //Log.d("Right Click",Float.toString(rightClickConversion));
+        task.execute(mRotationReading[2],mOrientationAngles[1],mOrientationAngles[2],leftClickConversion,rightClickConversion);
     }
 
     public void updateOrientationAngles(){
