@@ -14,12 +14,6 @@ s.bind((host, port))
 
 print("Success binding")
 
-
-############################################################
-#						Turtle stuff					   #
-############################################################
-      # Create our favorite turtle
-
 def rDevice():
     print("Reading")
     message, address = s.recvfrom(8192)
